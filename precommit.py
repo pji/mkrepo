@@ -13,21 +13,22 @@ import sys
 import unittest as ut
 from textwrap import wrap
 
+import mypy.api
 import pycodestyle as pcs
 import rstcheck
 
 # Import modules with doctests
+from imgblender import blends
 
 
 # Script configuration.
 doctest_modules = [
-    # Put imported modules with doctests here.
+    blends,
 ]
 ignore = []
 python_files = [
-    '*'
-    # Put the core module directory here.
-    # Submodules need separate entries because glob doesn't recurse.
+    '*',
+    'imgblender/*',
     'tests/*',
 ]
 rst_files = [
@@ -123,6 +124,19 @@ def check_style(file_paths):
     run_check_on_files(title, action, file_paths, file_ext, result_handler)
 
 
+def check_type_hints(path):
+    """Check the type hinting."""
+    print('Running type hinting check...')
+    results = mypy.api.run([path, ])
+    for report in results[:-1]:
+        ps = report.split('\n')
+        for p in ps:
+            lines = wrap(p, initial_indent='  ', subsequent_indent='    ')
+            for line in lines:
+                print(line)
+    print('Type hint checks complete.')
+
+
 def check_unit_tests(path):
     """Run the unit tests."""
     print('Running unit tests...')
@@ -160,6 +174,13 @@ def check_whitespace(file_paths):
 
 
 # Utility functions.
+def get_module_dir():
+    """Get the directory of the module."""
+    cwd = os.getcwd()
+    dirs = cwd.split('/')
+    return f'{cwd}/{dirs[-1]}'
+
+
 def in_ignore(name):
     for item in ignore:
         if name.endswith(item):
@@ -217,6 +238,7 @@ def main():
         check_doctests(doctest_modules)
         check_style(python_files)
         check_rst(rst_files)
+        check_type_hints(get_module_dir())
 
     else:
         print('Unit tests failed. Precommit checks aborted. Do not commit.')
