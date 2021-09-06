@@ -121,6 +121,16 @@ git add ${ROOT}/precommit.py
 cp ~/Dev/mkrepo/pre-commit ${ROOT}/.git/hooks
 chmod +x ${ROOT}/.git/hooks
 
+# Set up pip and pipenv
+source ${ROOT}/.venv/bin/activate
+pip install --upgrade pip
+pip install pipenv
+
+# Set up basic dev dependencies
+pipenv install -d pycodestyle
+pipenv install -d mypy
+pipenv install -d rstcheck
+
 echo "Build complete."
 echo "To start virtual environment:"
 echo "source ${ROOT}/.venv/bin/activate"
