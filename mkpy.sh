@@ -20,6 +20,9 @@
 #   * Added pre-commit hook
 #   * Added branch rename
 #
+# v 0.7
+#   * Converted to using pipenv for managing dependencies
+#   * Moved precommit.py config into the setup.cfg file
 #####
 
 # Location
@@ -50,6 +53,7 @@ echo ".venv" >> ${ROOT}/.gitignore
 
 # Populate python precommit script
 cp ~/Dev/mkrepo/precommit.py ${ROOT}/
+cp ~/Dev/mkrepo/setup.cfg ${ROOT}/
 
 # Populate licence
 cp ~/Dev/mkrepo/LICENSE ${ROOT}/

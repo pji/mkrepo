@@ -5,8 +5,11 @@ precommit
 
 Things that should be done before committing changes to the repo.
 """
+import configparser
 import doctest
+from fnmatch import fnmatch
 import glob
+import importlib
 from itertools import zip_longest
 import os
 import sys
@@ -17,30 +20,29 @@ import mypy.api
 import pycodestyle as pcs
 import rstcheck
 
-# Import modules with doctests
-
 
 # Script configuration.
-doctest_modules = [
-    # Any modules with doctests go here.
-]
-ignore = []
-python_files = [
-    '*',
-    # Put relative path to module code here.
-    'tests/*',
-]
-rst_files = [
-    '*',
-    'docs/*',
-]
-unit_tests = 'tests'
+CONFIG_FILE = 'setup.cfg'
 
 
+def get_config(filepath):
+    """Pull configuration settings from the configuration file."""
+    config_file = open(filepath)
+    config = configparser.ConfigParser()
+    config.read_file(config_file)
+    return config['precommit']
+
+
+def import_modules(names):
+    """Import the modules needed for the doctest checks."""
+    return [importlib.import_module(name) for name in names]
+
+
+# Precommit checks.
 def check_doctests(modules):
     """Run documentation tests."""
     print('Running doctests...')
-    if not doctest_modules:
+    if not modules:
         print('No doctests found.')
     else:
         for mod in modules:
@@ -78,7 +80,7 @@ def check_requirements():
     print('Requirements checked...')
 
 
-def check_rst(file_paths):
+def check_rst(file_paths, ignore):
     """Remove trailing whitespace."""
     def action(files):
         results = []
@@ -97,10 +99,11 @@ def check_rst(file_paths):
 
     title = 'Checking RSTs'
     file_ext = '.rst'
-    run_check_on_files(title, action, file_paths, file_ext, result_handler)
+    run_check_on_files(title, action, file_paths, ignore,
+                       file_ext, result_handler)
 
 
-def check_style(file_paths):
+def check_style(file_paths, ignore):
     """Remove trailing whitespace."""
     def result_handler(result):
         if result.get_count():
@@ -125,7 +128,8 @@ def check_style(file_paths):
     style = pcs.StyleGuide(config_file='setup.cfg', reporter=StyleReport)
     action = style.check_files
     file_ext = '.py'
-    run_check_on_files(title, action, file_paths, file_ext, result_handler)
+    run_check_on_files(title, action, file_paths, ignore,
+                       file_ext, result_handler)
 
 
 def check_type_hints(path):
@@ -169,12 +173,12 @@ def check_venv():
         raise ValueError(msg)
 
 
-def check_whitespace(file_paths):
+def check_whitespace(file_paths, ignore):
     """Remove trailing whitespace."""
     title = 'Checking whitespace'
     action = remove_whitespace
     file_ext = '.py'
-    run_check_on_files(title, action, file_paths, file_ext)
+    run_check_on_files(title, action, file_paths, ignore, file_ext)
 
 
 # Utility functions.
@@ -185,14 +189,14 @@ def get_module_dir():
     return f'{cwd}/{dirs[-1]}'
 
 
-def in_ignore(name):
+def in_ignore(name, ignore):
     for item in ignore:
-        if name.endswith(item):
+        if fnmatch(name, item):
             return True
     return False
 
 
-def run_check_on_files(title, action, file_paths,
+def run_check_on_files(title, action, file_paths, ignore,
                        file_ext=None, result_handler=None):
     print(f'{title}...')
     for file_path in file_paths:
@@ -201,7 +205,7 @@ def run_check_on_files(title, action, file_paths,
         if file_ext:
             files = [name for name in files if name.endswith(file_ext)]
         if ignore:
-            files = [name for name in files if not in_ignore(name)]
+            files = [name for name in files if not in_ignore(name, ignore)]
         result = action(files)
         print('. Done.')
         if result and result_handler:
@@ -240,6 +244,8 @@ def wrap_lines(lines, width, initial_indent, subsequent_indent):
 
 
 def main():
+    # Save time by not checking files that git ignores.
+    ignore = []
     with open('./.gitignore') as fh:
         lines = fh.readlines()
     for line in lines:
@@ -248,16 +254,24 @@ def main():
         if line:
             ignore.append(line)
 
+    # Set up the configuration for the checks.
+    config = get_config(CONFIG_FILE)
+    doctest_modules = import_modules(config['doctest_modules'].split('\n'))
+    python_files = config['python_files'].split('\n')
+    rst_files = config['rst_files'].split('\n')
+    unit_tests = config['unit_tests']
+
+    # Initial checks.
     check_venv()
-    check_whitespace(python_files)
+    check_whitespace(python_files, ignore)
     result = check_unit_tests(unit_tests)
 
     # Only continue with precommit checks if the unit tests passed.
     if not result.errors and not result.failures:
         check_requirements()
         check_doctests(doctest_modules)
-        check_style(python_files)
-        check_rst(rst_files)
+        check_style(python_files, ignore)
+        check_rst(rst_files, ignore)
         check_type_hints(get_module_dir())
 
     else:
