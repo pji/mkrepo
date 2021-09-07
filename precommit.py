@@ -39,12 +39,13 @@ def import_modules(names):
 
 
 # Precommit checks.
-def check_doctests(modules):
+def check_doctests(names):
     """Run documentation tests."""
     print('Running doctests...')
-    if not modules:
+    if not names:
         print('No doctests found.')
     else:
+        modules = import_modules(names)
         for mod in modules:
             doctest.testmod(mod)
         print('Doctests complete.')
@@ -256,7 +257,9 @@ def main():
 
     # Set up the configuration for the checks.
     config = get_config(CONFIG_FILE)
-    doctest_modules = import_modules(config['doctest_modules'].split('\n'))
+    doctest_modules = []
+    if 'doctest_modules' in config:
+        doctest_modules = config['doctest_modules'].split('\n')
     python_files = config['python_files'].split('\n')
     rst_files = config['rst_files'].split('\n')
     unit_tests = config['unit_tests']
