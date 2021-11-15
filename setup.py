@@ -4,12 +4,7 @@ setup
 
 A script for creating Python packages.
 """
-__title__ = 'setup'
-__description = 'A script for creating Python packages.'
 __version__ = '0.1.0'
-__author__ = 'Paul J. Iutzi'
-__license__ = 'MIT'
-__copyright__ = 'Copyright (c) 2021 Paul J. Iutzi'
 
 
 import importlib

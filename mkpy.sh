@@ -23,6 +23,11 @@
 # v 0.7
 #   * Converted to using pipenv for managing dependencies
 #   * Moved precommit.py config into the setup.cfg file
+#
+# v 0.8
+#   * Moved to Python 3.10
+#   * Moved packaging setup to setup.cfg
+#   * Added packaging and build requirements
 #####
 
 # Location
@@ -61,25 +66,7 @@ cp ~/Dev/mkrepo/LICENSE ${ROOT}/
 # Build module
 mkdir ${ROOT}/${BASE}
 touch ${ROOT}/${BASE}/__init__.py
-touch ${ROOT}/${BASE}/__version__.py
 touch ${ROOT}/${BASE}/${BASE}.py
-
-# Populate __version__.py
-LINE=$(echo -n __version__ | tr -c '' '[~*]')
-DATE=$(date +'%Y')
-echo '"""' >> ${ROOT}/${BASE}/__version__.py
-echo '__version__' >> ${ROOT}/${BASE}/__version__.py
-echo '~~~~~~~~~~~' >> ${ROOT}/${BASE}/__version__.py
-echo '' >> ${ROOT}/${BASE}/__version__.py
-echo 'Common information, including the version number.' >> ${ROOT}/${BASE}/__version__.py
-echo '"""' >> ${ROOT}/${BASE}/__version__.py
-echo '' >> ${ROOT}/${BASE}/__version__.py
-echo "__title__ = '"${BASE}"'" >> ${ROOT}/${BASE}/__version__.py
-echo "__description__ = ''" >> ${ROOT}/${BASE}/__version__.py
-echo "__version__ = '0.0.1-dev'" >> ${ROOT}/${BASE}/__version__.py
-echo "__author__ = 'Paul J. Iutzi'" >> ${ROOT}/${BASE}/__version__.py
-echo "__license__ = 'MIT'" >> ${ROOT}/${BASE}/__version__.py
-echo "__copyright__ = 'Copyright (c) "${DATE}" Paul J. Iutzi'" >> ${ROOT}/${BASE}/__version__.py
 
 # Populate the core file
 LINE=$(echo -n ${BASE} | tr -c '' '[~*]')
@@ -108,16 +95,14 @@ echo ${LINE} >> ${ROOT}/tests/test_${BASE}.py
 echo '"""' >> ${ROOT}/tests/test_${BASE}.py
 echo 'import unittest as ut' >> ${ROOT}/tests/test_${BASE}.py
 
-
 # Create virtual environment
-python3 -m venv ${ROOT}/.venv
+/usr/local/opt/python@3.10/bin/python3 -m venv ${ROOT}/.venv
 
 # Add to the git branch
 git init
 git branch -m 'main'
 git add ${ROOT}/README.rst
 git add ${ROOT}/LICENSE
-git add ${ROOT}/setup.py
 git add ${ROOT}/requirements.txt
 git add ${ROOT}/${BASE}
 git add ${ROOT}/.gitignore
@@ -134,6 +119,9 @@ pip install pipenv
 pipenv install -d pycodestyle
 pipenv install -d mypy
 pipenv install -d rstcheck
+pipenv install -d wheel
+pipenv install -d build
+pipenv install -d twine
 
 echo "Build complete."
 echo "To start virtual environment:"
