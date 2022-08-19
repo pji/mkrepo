@@ -28,6 +28,9 @@
 #   * Moved to Python 3.10
 #   * Moved packaging setup to setup.cfg
 #   * Added packaging and build requirements
+#
+# v 0.9
+#   * Moved location of the homebrew Cellar.
 #####
 
 # Location
@@ -96,7 +99,7 @@ echo '"""' >> ${ROOT}/tests/test_${BASE}.py
 echo 'import unittest as ut' >> ${ROOT}/tests/test_${BASE}.py
 
 # Create virtual environment
-/usr/local/opt/python@3.10/bin/python3 -m venv ${ROOT}/.venv
+${HOMEBREW_CELLAR}/python@3.10/bin/python3 -m venv ${ROOT}/.venv
 
 # Add to the git branch
 git init
@@ -126,4 +129,3 @@ pipenv install -d twine
 echo "Build complete."
 echo "To start virtual environment:"
 echo "source ${ROOT}/.venv/bin/activate"
-
