@@ -31,6 +31,10 @@
 #
 # v 0.9
 #   * Moved location of the homebrew Cellar.
+#
+# v0.10
+#   * Checks to make sure the HOMEBREW_CELLAR environment variable is
+#     set before building the virtual environment.
 #####
 
 # Location
@@ -99,7 +103,13 @@ echo '"""' >> ${ROOT}/tests/test_${BASE}.py
 echo 'import unittest as ut' >> ${ROOT}/tests/test_${BASE}.py
 
 # Create virtual environment
-${HOMEBREW_CELLAR}/python@3.10/bin/python3 -m venv ${ROOT}/.venv
+# Since Homebrew's location can move around, it's location must be
+# defined as an environment variable for this script to work.
+if [[ -z "$HOMEBREW_CELLAR" ]]; then
+    echo "HOMEBREW_CELLAR must be defined." 1>&2
+    exit 1
+fi
+${HOMEBREW_CELLAR}/python@3.10/3.10.6_1/bin/python3 -m venv ${ROOT}/.venv
 
 # Add to the git branch
 git init
