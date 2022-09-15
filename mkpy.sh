@@ -35,6 +35,9 @@
 # v0.10
 #   * Checks to make sure the HOMEBREW_CELLAR environment variable is
 #     set before building the virtual environment.
+#
+# v0.11
+#   * Switched from using setup.py to pyproject.toml.
 #####
 
 # Location
@@ -45,9 +48,10 @@ echo "Building ${BASE} in ${ROOT}"
 
 # Build root files
 touch ${ROOT}/README.rst
-touch ${ROOT}/setup.py
 touch ${ROOT}/requirements.txt
 touch ${ROOT}/.gitignore
+cp ~/Dev/mkrepo/setup.cfg ${ROOT}/
+cp ~/Dev/mkrepo/pyproject.toml
 
 # Populate README.rst
 LINE=$(echo -n ${BASE} | tr -c '' '[#*]')
@@ -65,7 +69,6 @@ echo ".venv" >> ${ROOT}/.gitignore
 
 # Populate python precommit script
 cp ~/Dev/mkrepo/precommit.py ${ROOT}/
-cp ~/Dev/mkrepo/setup.cfg ${ROOT}/
 
 # Populate licence
 cp ~/Dev/mkrepo/LICENSE ${ROOT}/
