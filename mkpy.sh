@@ -51,7 +51,7 @@ touch ${ROOT}/README.rst
 touch ${ROOT}/requirements.txt
 touch ${ROOT}/.gitignore
 cp ~/Dev/mkrepo/setup.cfg ${ROOT}/
-cp ~/Dev/mkrepo/pyproject.toml
+cp ~/Dev/mkrepo/pyproject.toml ${ROOT}/
 
 # Populate README.rst
 LINE=$(echo -n ${BASE} | tr -c '' '[#*]')
