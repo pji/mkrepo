@@ -38,6 +38,13 @@
 #
 # v0.11
 #   * Switched from using setup.py to pyproject.toml.
+#
+# v0.12
+#   * Upgraded to Python 3.11.0
+#   * Added Makefile
+#   * Added readthedocs.yaml
+#   * Moved setuptools config to pyproject.toml
+#   * Added sphinx and sphinx docs structure
 #####
 
 # Location
@@ -52,6 +59,8 @@ touch ${ROOT}/requirements.txt
 touch ${ROOT}/.gitignore
 cp ~/Dev/mkrepo/setup.cfg ${ROOT}/
 cp ~/Dev/mkrepo/pyproject.toml ${ROOT}/
+cp ~/Dev/mkrepo/Makefile ${ROOT}/
+cp ~/Dev/mkrepo/readthedocs.yaml ${ROOT}/
 
 # Populate README.rst
 LINE=$(echo -n ${BASE} | tr -c '' '[#*]')
@@ -87,13 +96,15 @@ echo '"""' >> ${ROOT}/${BASE}/${BASE}.py
 
 # Build docs
 mkdir ${ROOT}/docs
-touch ${ROOT}/docs/requirements.rst
+mkdir ${ROOT}/docs/source
+touch ${ROOT}/docs/source/requirements.rst
+cp ~/Dev/mkrepo/conf.py ${ROOT}/docs/source/
 
 # Populate requirements.rst
 LINE=$(echo -n ${BASE}\ Requirements | tr -c '' '[#*]')
-echo ${LINE} >> ${ROOT}/docs/requirements.rst
-echo ${BASE}\ Requirements >> ${ROOT}/docs/requirements.rst
-echo ${LINE} >> ${ROOT}/docs/requirements.rst
+echo ${LINE} >> ${ROOT}/docs/source/requirements.rst
+echo ${BASE}\ Requirements >> ${ROOT}/docs/source/requirements.rst
+echo ${LINE} >> ${ROOT}/docs/source/requirements.rst
 
 # Build tests
 mkdir ${ROOT}/tests
@@ -112,7 +123,7 @@ if [[ -z "$HOMEBREW_CELLAR" ]]; then
     echo "HOMEBREW_CELLAR must be defined." 1>&2
     exit 1
 fi
-${HOMEBREW_CELLAR}/python@3.10/3.10.6_1/bin/python3 -m venv ${ROOT}/.venv
+${HOMEBREW_CELLAR}/python@3.11/3.11.0/bin/python3.11 -m venv ${ROOT}/.venv
 
 # Add to the git branch
 git init
@@ -132,9 +143,11 @@ pip install --upgrade pip
 pip install pipenv
 
 # Set up basic dev dependencies
+pipenv install -d sphinx
+pipenv install -d sphinx-rtd-theme
 pipenv install -d pycodestyle
 pipenv install -d mypy
-pipenv install -d rstcheck
+pipenv install -d rstcheck[sphinx]
 pipenv install -d wheel
 pipenv install -d build
 pipenv install -d twine
