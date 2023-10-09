@@ -96,17 +96,17 @@ cp ~/Dev/mkrepo/precommit.py ${ROOT}/
 cp ~/Dev/mkrepo/LICENSE ${ROOT}/
 
 # Build module
-mkdir ${ROOT}/${BASE}
-mkdir ${ROOT}/${BASE}/src
-touch ${ROOT}/${BASE}/src/__init__.py
-touch ${ROOT}/${BASE}/src/${BASE}.py
+mkdir ${ROOT}/src/${BASE}
+mkdir ${ROOT}/src/${BASE}
+touch ${ROOT}/src/${BASE}/__init__.py
+touch ${ROOT}/src/${BASE}/${BASE}.py
 
 # Populate the core file
 LINE=$(echo -n ${BASE} | tr -c '' '[~*]')
-echo '"""' >> ${ROOT}/${BASE}/src/${BASE}.py
-echo ${BASE} >> ${ROOT}/${BASE}/src/${BASE}.py
-echo ${LINE} >> ${ROOT}/${BASE}/src/${BASE}.py
-echo '"""' >> ${ROOT}/${BASE}/src/${BASE}.py
+echo '"""' >> ${ROOT}/src/${BASE}/${BASE}.py
+echo ${BASE} >> ${ROOT}/src/${BASE}/${BASE}.py
+echo ${LINE} >> ${ROOT}/src/${BASE}/${BASE}.py
+echo '"""' >> ${ROOT}/src/${BASE}/${BASE}.py
 
 # Build docs
 mkdir ${ROOT}/docs
