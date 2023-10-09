@@ -37,6 +37,6 @@ setuptools.setup(
     install_requires=reqs,
     author_email='pji@mac.com',
     packages=setuptools.find_packages(),
-    python_requires='>=3.9',
+    python_requires='>=3.12',
     zip_safe=False
 )

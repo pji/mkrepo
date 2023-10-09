@@ -13,11 +13,11 @@ import importlib
 from itertools import zip_longest
 import os
 import sys
-import unittest as ut
 from textwrap import wrap
 
 import mypy.api
 import pycodestyle as pcs
+import pytest
 import rstcheck_core.checker as rstchecker
 
 
@@ -83,7 +83,7 @@ def check_requirements():
 
 
 def check_rst(file_paths, ignore):
-    """Run syntax checks on any ReStructured Text documents."""
+    """Remove trailing whitespace."""
     def action(files):
         results = []
         for file in files:
@@ -91,22 +91,29 @@ def check_rst(file_paths, ignore):
                 lines = fh.read()
             result = list(rstchecker.check_source(lines))
             if result:
-                for item in result:
-                    msg = f'{file}:{item["line_number"]} {item["message"]}'
-                    results.append(msg)
+                results.append(file, *result)
         return results
+
+    def result_handler(result):
+        if result:
+            for line in result:
+                print(' ' * 4 + line)
 
     title = 'Checking RSTs'
     file_ext = '.rst'
     run_check_on_files(title, action, file_paths, ignore,
-                       file_ext, write_report)
+                       file_ext, result_handler)
 
 
 def check_style(file_paths, ignore):
-    """Run style checks on the code."""
+    """Remove trailing whitespace."""
     def result_handler(result):
         if result.get_count():
-            write_report(result.result_messages)
+            for msg in result.result_messages:
+                lines = wrap(msg, 78)
+                print(' ' * 4 + lines[0])
+                for line in lines[1:]:
+                    print(' ' * 6 + line)
             result.result_messages = []
 
     class StyleReport(pcs.BaseReport):
@@ -143,10 +150,7 @@ def check_type_hints(path):
 def check_unit_tests(path):
     """Run the unit tests."""
     print('Running unit tests...')
-    loader = ut.TestLoader()
-    tests = loader.discover(path)
-    runner = ut.TextTestRunner()
-    result = runner.run(tests)
+    result = pytest.main(['--capture', 'fd',])
     print('Unit tests complete.')
     return result
 
@@ -181,7 +185,7 @@ def get_module_dir():
     """Get the directory of the module."""
     cwd = os.getcwd()
     dirs = cwd.split('/')
-    return f'{cwd}/{dirs[-1]}'
+    return f'{cwd}/src/{dirs[-1]}'
 
 
 def in_ignore(name, ignore):
@@ -238,14 +242,6 @@ def wrap_lines(lines, width, initial_indent, subsequent_indent):
     return out
 
 
-def write_report(result):
-    if not result:
-        return None
-    wrapped = wrap_lines(result, 72, ' ' * 4, ' ' * 6)
-    for line in wrapped:
-        print(line)
-
-
 def main():
     # Save time by not checking files that git ignores.
     ignore = []
@@ -272,10 +268,9 @@ def main():
     result = check_unit_tests(unit_tests)
 
     # Only continue with precommit checks if the unit tests passed.
-    if not result.errors and not result.failures:
+    if result == pytest.ExitCode.OK:
         check_requirements()
-        if 'doctest_modules' in config:
-            check_doctests(doctest_modules)
+        check_doctests(doctest_modules)
         check_style(python_files, ignore)
         check_rst(rst_files, ignore)
         check_type_hints(get_module_dir())

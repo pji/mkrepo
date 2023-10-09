@@ -45,6 +45,11 @@
 #   * Added readthedocs.yaml
 #   * Moved setuptools config to pyproject.toml
 #   * Added sphinx and sphinx docs structure
+#
+# v0.13
+#   * Move to use pytest.
+#   * Moved to Python 3.12.0.
+#   * Moved project into src directory.
 #####
 
 # Location
@@ -72,9 +77,17 @@ echo ${LINE} >> ${ROOT}/README.rst
 echo "# Ignore compiled files." >> ${ROOT}/.gitignore
 echo "*.pyc" >> ${ROOT}/.gitignore
 echo "*__pycache__" >> ${ROOT}/.gitignore
+echo "/build" >> ${ROOT}/.gitignore
+echo "/dist" >> ${ROOT}/.gitignore
+echo "*.egg-info" >> ${ROOT}/.gitignore
 echo "" >> ${ROOT}/.gitignore
 echo "# Ignore virtual environment." >> ${ROOT}/.gitignore
 echo ".venv" >> ${ROOT}/.gitignore
+echo "" >> ${ROOT}/.gitignore
+echo "# Ignore OS/IDE files." >> ${ROOT}/.gitignore
+echo ".DS_Store" >> ${ROOT}/.gitignore
+echo "*BBEdit*" >> ${ROOT}/.gitignore
+echo ".idea" >> ${ROOT}/.gitignore
 
 # Populate python precommit script
 cp ~/Dev/mkrepo/precommit.py ${ROOT}/
@@ -84,15 +97,16 @@ cp ~/Dev/mkrepo/LICENSE ${ROOT}/
 
 # Build module
 mkdir ${ROOT}/${BASE}
-touch ${ROOT}/${BASE}/__init__.py
-touch ${ROOT}/${BASE}/${BASE}.py
+mkdir ${ROOT}/${BASE}/src
+touch ${ROOT}/${BASE}/src/__init__.py
+touch ${ROOT}/${BASE}/src/${BASE}.py
 
 # Populate the core file
 LINE=$(echo -n ${BASE} | tr -c '' '[~*]')
-echo '"""' >> ${ROOT}/${BASE}/${BASE}.py
-echo ${BASE} >> ${ROOT}/${BASE}/${BASE}.py
-echo ${LINE} >> ${ROOT}/${BASE}/${BASE}.py
-echo '"""' >> ${ROOT}/${BASE}/${BASE}.py
+echo '"""' >> ${ROOT}/${BASE}/src/${BASE}.py
+echo ${BASE} >> ${ROOT}/${BASE}/src/${BASE}.py
+echo ${LINE} >> ${ROOT}/${BASE}/src/${BASE}.py
+echo '"""' >> ${ROOT}/${BASE}/src/${BASE}.py
 
 # Build docs
 mkdir ${ROOT}/docs
@@ -114,7 +128,6 @@ echo '"""' >> ${ROOT}/tests/test_${BASE}.py
 echo test_${BASE} >> ${ROOT}/tests/test_${BASE}.py
 echo ${LINE} >> ${ROOT}/tests/test_${BASE}.py
 echo '"""' >> ${ROOT}/tests/test_${BASE}.py
-echo 'import unittest as ut' >> ${ROOT}/tests/test_${BASE}.py
 
 # Create virtual environment
 # Since Homebrew's location can move around, it's location must be
@@ -123,7 +136,7 @@ if [[ -z "$HOMEBREW_CELLAR" ]]; then
     echo "HOMEBREW_CELLAR must be defined." 1>&2
     exit 1
 fi
-${HOMEBREW_CELLAR}/python@3.11/3.11.0/bin/python3.11 -m venv ${ROOT}/.venv
+${HOMEBREW_CELLAR}/python@3.12/3.12.0/bin/python3.12 -m venv ${ROOT}/.venv
 
 # Add to the git branch
 git init
@@ -144,10 +157,13 @@ pip install pipenv
 
 # Set up basic dev dependencies
 pipenv install -d sphinx
-pipenv install -d sphinx-rtd-theme
+pipenv install -d furo
 pipenv install -d pycodestyle
 pipenv install -d mypy
 pipenv install -d rstcheck[sphinx]
+pipenv install -d pytest
+pipenv install -d isort
+pipenv install -d tox
 pipenv install -d wheel
 pipenv install -d build
 pipenv install -d twine
