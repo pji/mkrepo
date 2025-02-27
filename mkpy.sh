@@ -50,28 +50,42 @@
 #   * Move to use pytest.
 #   * Moved to Python 3.12.0.
 #   * Moved project into src directory.
+# 
+# v0.14
+#   * Move to using poetry.
 #####
 
 # Location
-ROOT=`pwd`
-BASE=`basename ${ROOT}`
+# ROOT=`pwd`
+# BASE=`basename ${ROOT}`
+HOMEBREW="/opt/homebrew/bin"
+BASE=$1
+PARENT=`pwd`
+ROOT=${PARENT}/${BASE}
+MODBASE=`echo ${BASE} | sed -e 's/-/_/'`
 
 echo "Building ${BASE} in ${ROOT}"
 
+# Build core repo with poetry. Assumes poetry is available via homebrew.
+${HOMEBREW}/poetry new ${BASE}
+
 # Build root files
-touch ${ROOT}/README.rst
-touch ${ROOT}/requirements.txt
 touch ${ROOT}/.gitignore
 cp ~/Dev/mkrepo/setup.cfg ${ROOT}/
-cp ~/Dev/mkrepo/pyproject.toml ${ROOT}/
 cp ~/Dev/mkrepo/Makefile ${ROOT}/
 cp ~/Dev/mkrepo/readthedocs.yaml ${ROOT}/
 
-# Populate README.rst
+# Populate README.md
 LINE=$(echo -n ${BASE} | tr -c '' '[#*]')
-echo ${LINE} >> ${ROOT}/README.rst
-echo ${BASE} >> ${ROOT}/README.rst
-echo ${LINE} >> ${ROOT}/README.rst
+echo ${LINE} >> ${ROOT}/README.md
+echo ${BASE} >> ${ROOT}/README.md
+echo ${LINE} >> ${ROOT}/README.md
+
+# Update the files with the project name.
+sed -i .bkp -e s/[{]PROJECT_NAME[}]/${MODBASE}/g ${ROOT}/Makefile
+sed -i .bkp -e s/[{]PROJECT_NAME[}]/${MODBASE}/g ${ROOT}/setup.cfg
+rm ${ROOT}/Makefile.bkp
+rm ${ROOT}/setup.cfg.bkp
 
 # Populate .gitignore
 echo "# Ignore compiled files." >> ${ROOT}/.gitignore
@@ -96,17 +110,14 @@ cp ~/Dev/mkrepo/precommit.py ${ROOT}/
 cp ~/Dev/mkrepo/LICENSE ${ROOT}/
 
 # Build module
-mkdir ${ROOT}/src/${BASE}
-mkdir ${ROOT}/src/${BASE}
-touch ${ROOT}/src/${BASE}/__init__.py
-touch ${ROOT}/src/${BASE}/${BASE}.py
+touch ${ROOT}/src/${MODBASE}/${MODBASE}.py
 
 # Populate the core file
 LINE=$(echo -n ${BASE} | tr -c '' '[~*]')
-echo '"""' >> ${ROOT}/src/${BASE}/${BASE}.py
-echo ${BASE} >> ${ROOT}/src/${BASE}/${BASE}.py
-echo ${LINE} >> ${ROOT}/src/${BASE}/${BASE}.py
-echo '"""' >> ${ROOT}/src/${BASE}/${BASE}.py
+echo '"""' >> ${ROOT}/src/${MODBASE}/${MODBASE}.py
+echo ${BASE} >> ${ROOT}/src/${MODBASE}/${MODBASE}.py
+echo ${LINE} >> ${ROOT}/src/${MODBASE}/${MODBASE}.py
+echo '"""' >> ${ROOT}/src/${MODBASE}/${MODBASE}.py
 
 # Build docs
 mkdir ${ROOT}/docs
@@ -121,52 +132,53 @@ echo ${BASE}\ Requirements >> ${ROOT}/docs/source/requirements.rst
 echo ${LINE} >> ${ROOT}/docs/source/requirements.rst
 
 # Build tests
-mkdir ${ROOT}/tests
-touch ${ROOT}/tests/test_${BASE}.py
-LINE=$(echo -n test_${BASE} | tr -c '' '[~*]')
-echo '"""' >> ${ROOT}/tests/test_${BASE}.py
-echo test_${BASE} >> ${ROOT}/tests/test_${BASE}.py
-echo ${LINE} >> ${ROOT}/tests/test_${BASE}.py
-echo '"""' >> ${ROOT}/tests/test_${BASE}.py
+# mkdir ${ROOT}/tests
+touch ${ROOT}/tests/test_${MODBASE}.py
+LINE=$(echo -n test_${MODBASE} | tr -c '' '[~*]')
+echo '"""' >> ${ROOT}/tests/test_${MODBASE}.py
+echo test_${MODBASE} >> ${ROOT}/tests/test_${MODBASE}.py
+echo ${LINE} >> ${ROOT}/tests/test_${MODBASE}.py
+echo '"""' >> ${ROOT}/tests/test_${MODBASE}.py
 
 # Create virtual environment
-# Since Homebrew's location can move around, it's location must be
-# defined as an environment variable for this script to work.
-if [[ -z "$HOMEBREW_CELLAR" ]]; then
-    echo "HOMEBREW_CELLAR must be defined." 1>&2
-    exit 1
-fi
-${HOMEBREW_CELLAR}/python@3.12/3.12.0/bin/python3.12 -m venv ${ROOT}/.venv
+${HOMEBREW}/python3 -m venv ${ROOT}/.venv
+
+# Set up pip and poetry
+cd ${ROOT}
+source ${ROOT}/.venv/bin/activate
+pip install --upgrade pip
+pip install poetry
+
+# Set up basic dev dependencies
+poetry add --dev sphinx
+poetry add --dev furo
+poetry add --dev pycodestyle
+poetry add --dev mypy
+poetry add --dev rstcheck[sphinx]
+poetry add --dev pytest
+poetry add --dev isort
+poetry add --dev tox
+poetry add --dev wheel
+poetry add --dev build
+poetry add --dev twine
 
 # Add to the git branch
 git init
 git branch -m 'main'
-git add ${ROOT}/README.rst
+git add ${ROOT}/README.md
 git add ${ROOT}/LICENSE
-git add ${ROOT}/requirements.txt
-git add ${ROOT}/${BASE}
+git add ${ROOT}/Makefile
+git add ${ROOT}/poetry.lock
+git add ${ROOT}/pyproject.toml
+git add ${ROOT}/readthedocs.yaml
+git add ${ROOT}/setup.cfg
+git add ${ROOT}/docs
+git add ${ROOT}/src
+git add ${ROOT}/tests
 git add ${ROOT}/.gitignore
 git add ${ROOT}/precommit.py
 cp ~/Dev/mkrepo/pre-commit ${ROOT}/.git/hooks
 chmod +x ${ROOT}/.git/hooks
-
-# Set up pip and pipenv
-source ${ROOT}/.venv/bin/activate
-pip install --upgrade pip
-pip install pipenv
-
-# Set up basic dev dependencies
-pipenv install -d sphinx
-pipenv install -d furo
-pipenv install -d pycodestyle
-pipenv install -d mypy
-pipenv install -d rstcheck[sphinx]
-pipenv install -d pytest
-pipenv install -d isort
-pipenv install -d tox
-pipenv install -d wheel
-pipenv install -d build
-pipenv install -d twine
 
 echo "Build complete."
 echo "To start virtual environment:"

@@ -39,18 +39,6 @@ def import_modules(names):
 
 
 # Precommit checks.
-def check_doctests(names):
-    """Run documentation tests."""
-    print('Running doctests...')
-    if not names:
-        print('No doctests found.')
-    else:
-        modules = import_modules(names)
-        for mod in modules:
-            doctest.testmod(mod)
-        print('Doctests complete.')
-
-
 def check_requirements():
     """Check requirements."""
     print('Checking requirements...')
@@ -270,7 +258,6 @@ def main():
     # Only continue with precommit checks if the unit tests passed.
     if result == pytest.ExitCode.OK:
         check_requirements()
-        check_doctests(doctest_modules)
         check_style(python_files, ignore)
         check_rst(rst_files, ignore)
         check_type_hints(get_module_dir())

@@ -6,7 +6,7 @@ build:
 
 .PHONY: buildt
 buildt:
-	python -m pipenv install --dev -e .
+	poetry install
 
 .PHONY: clean
 clean:
@@ -17,10 +17,7 @@ clean:
 	rm -rf src/{PROJECT_NAME}/*.pyc
 	rm -rf examples/__pycache__
 	rm -rf tests/__pycache__
-	rm -rf thurible/__pycache__
 	rm -f *.log
-	python -m pipenv uninstall imgblender
-	python -m pipenv install --dev -e .
 
 .PHONY: docs
 docs:
@@ -28,12 +25,15 @@ docs:
 
 .PHONY: pre
 pre:
+	tox
+	python -m pytest --doctest-modules src --capture=fd
 	python precommit.py
 	git status
 
 .PHONY: test
 test:
 	python -m pytest --capture=fd
+	python -m pytest --doctest-modules src --capture=fd
 
 .PHONY: testv
 testv:
