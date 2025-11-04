@@ -50,19 +50,36 @@
 #   * Move to use pytest.
 #   * Moved to Python 3.12.0.
 #   * Moved project into src directory.
-# 
+#
 # v0.14
 #   * Move to using poetry.
+#
+# v0.15 2025.11.4
+#   * Use HOMEBREW_PREFIX to determine homebrew location.
+#   * Add the poetry export plugin.
+#   * Generates the initial requirements.txt file.
+#   * Now checks if an argument was passed.
+#   * Now checks if desired repo exists.
 #####
 
+# Make sure something was given as a parameter.
+if [[ -z "$1" ]]; then
+    echo 'Proper syntax: mkpy.sh <name_of_repo>'
+    exit 0
+fi
+
 # Location
-# ROOT=`pwd`
-# BASE=`basename ${ROOT}`
-HOMEBREW="/opt/homebrew/bin"
+HOMEBREW=${HOMEBREW_PREFIX}/bin
 BASE=$1
 PARENT=`pwd`
 ROOT=${PARENT}/${BASE}
 MODBASE=`echo ${BASE} | sed -e 's/-/_/'`
+
+# Make sure the root doesn't already exist.
+if [[ -d ${ROOT} ]]; then
+    echo "Path ${ROOT} already exists."
+    exit 0
+fi
 
 echo "Building ${BASE} in ${ROOT}"
 
@@ -132,7 +149,6 @@ echo ${BASE}\ Requirements >> ${ROOT}/docs/source/requirements.rst
 echo ${LINE} >> ${ROOT}/docs/source/requirements.rst
 
 # Build tests
-# mkdir ${ROOT}/tests
 touch ${ROOT}/tests/test_${MODBASE}.py
 LINE=$(echo -n test_${MODBASE} | tr -c '' '[~*]')
 echo '"""' >> ${ROOT}/tests/test_${MODBASE}.py
@@ -148,6 +164,7 @@ cd ${ROOT}
 source ${ROOT}/.venv/bin/activate
 pip install --upgrade pip
 pip install poetry
+poetry self add poetry-plugin-export
 
 # Set up basic dev dependencies
 poetry add --dev sphinx
@@ -161,6 +178,9 @@ poetry add --dev tox
 poetry add --dev wheel
 poetry add --dev build
 poetry add --dev twine
+
+# Create the original requirements.txt file.
+poetry export -f requirements.txt -o requirements.txt --without-hashes
 
 # Add to the git branch
 git init
@@ -177,6 +197,7 @@ git add ${ROOT}/src
 git add ${ROOT}/tests
 git add ${ROOT}/.gitignore
 git add ${ROOT}/precommit.py
+git add ${ROOT}/requirements.txt
 cp ~/Dev/mkrepo/pre-commit ${ROOT}/.git/hooks
 chmod +x ${ROOT}/.git/hooks
 
